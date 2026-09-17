@@ -16,6 +16,9 @@ RUN apt-get update \
 # Copy application
 COPY . .
 
+# Check PHP environment
+RUN php --ini && php -m && composer check-platform-reqs --no-dev
+
 # PHP dependencies
 RUN composer install \
     --no-dev \
