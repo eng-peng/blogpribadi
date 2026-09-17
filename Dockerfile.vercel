@@ -24,7 +24,7 @@ RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \
-    --vvv
+    -vvv
 
 # Frontend dependencies + build
 RUN npm ci
