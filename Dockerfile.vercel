@@ -1,0 +1,41 @@
+FROM dunglas/frankenphp:php8.3-bookworm
+
+WORKDIR /app
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Node.js + npm
+RUN apt-get update \
+    && apt-get install -y curl ca-certificates \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy application
+COPY . .
+
+# PHP dependencies
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction
+
+# Frontend dependencies + build
+RUN npm ci
+RUN npm run build
+
+# Laravel writable directories
+RUN mkdir -p \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    bootstrap/cache
+
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+# FrankenPHP configuration
+COPY Caddyfile /etc/caddy/Caddyfile
+
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
